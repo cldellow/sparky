@@ -31,7 +31,7 @@ class Jobs extends Component {
   render() {
     const jobs = [];
     this.state.jobs.forEach(el => {
-      jobs.push(<Job data={el}/>)
+      jobs.push(<Job key={el.id} data={el}/>)
     });
     return (
       <table className="jobs">

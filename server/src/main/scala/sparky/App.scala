@@ -4,10 +4,18 @@ import spark.{Request, Response}
 import spray.json._
 import DefaultJsonProtocol._
 
+object Formatters extends DefaultJsonProtocol {
+  implicit val jobFormatter = jsonFormat6(Job)
+}
+
+
 object App extends SparkScaffolding {
   def main(args: Array[String]): Unit = {
-    println("ok")
+    println("Ready!")
+    import Formatters._
 
-    get("/hello"){ (req: Request, res: Response) => Map("a" -> 1, "b" -> 2).toJson }
+    get("/active-jobs"){ (req: Request, res: Response) =>
+      State.activeJobs.toJson
+    }
   }
 }

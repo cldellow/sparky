@@ -3,15 +3,8 @@ import React, { Component } from 'react';
 class Job extends Component {
   constructor(props) {
     super(props);
-    
-    this.state = {
-      id: 123,
-      description: "Doing stuff",
-      duration: 12,
-      tasksDone: 12,
-      tasksActive: 4,
-      tasksTotal: 20
-    };
+    console.log(props);
+    this.state = props.data;
   }
 
 

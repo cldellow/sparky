@@ -6,6 +6,7 @@ import DefaultJsonProtocol._
 
 import collection.mutable.ListBuffer
 import collection.mutable.Map
+import collection.immutable.TreeMap
 import sys.process._
 
 object Formatters extends DefaultJsonProtocol {
@@ -17,7 +18,7 @@ object Formatters extends DefaultJsonProtocol {
 object App extends SparkScaffolding {
   def main(args: Array[String]): Unit = {
 
-    val hosts: Map[String, Map[String, ListBuffer[Double]]] = Map()
+    val hosts: Map[String, Map[String, ListBuffer[TsValue]]] = Map()
     val threads: Map[String, Map[String, CpuThread]] = Map()
 
     val thread2 = new Thread {
@@ -31,7 +32,7 @@ object App extends SparkScaffolding {
           e match {
             case "SparkListenerExecutorAdded" =>
               val host = ev(1)
-              val cpuInfo = new ListBuffer() ++= Seq(0, 0.1, 0.2, 0.3, 0.4)
+              val cpuInfo = new ListBuffer() ++= Seq(TsValue(0, 0))
               val cpuThread = new CpuThread(cpuInfo, host)
               cpuThread.start
               threads += (host -> Map( "thread" -> cpuThread))
@@ -49,24 +50,34 @@ object App extends SparkScaffolding {
     }
     thread2.start
 
+    import Formatters._
+
     get("/hello"){ (req: Request, res: Response) => Map("a" -> 1, "b" -> 2).toMap.toJson }
     get("/host/:host") { (req: Request, res: Response) =>
       hosts.get(req.params(":host")).getOrElse(Map()).toMap.map {
-      case ("cpu", value) => ("cpu", value.toSeq)
-      case  (key, value) => (key, value)
+        case ("cpu", value) => ("cpu", value.toSeq)
+        case  (key, value) => (key, value.toSeq)
       }.toJson
     }
 
 
     println("Ready!")
-    import Formatters._
 
     get("/active-jobs"){ (req: Request, res: Response) =>
       State.activeJobs.toJson
     }
 
     get("/cluster-cpu"){ (req: Request, res: Response) =>
-      State.clusterCpu.toJson
+      val tsMap:Map[Long, TsValue] = Map()
+      val normalizer = hosts.size
+
+      hosts.foreach{case (host, y) => y.lift("cpu").foreach{buffer =>
+        buffer.foreach { x =>
+          tsMap += (x.ts -> TsValue(x.ts, x.value/normalizer + tsMap.lift(x.ts).map(_.value).getOrElse(0.0)))
+        }
+      }}
+      val tmap: TreeMap[Long, TsValue] = TreeMap((0L, TsValue(0L, 0.0))) ++ tsMap
+      tmap.values.toJson
     }
 
     get("/cluster-bandwidth"){ (req: Request, res: Response) =>
@@ -74,13 +85,16 @@ object App extends SparkScaffolding {
     }
   }
 }
-class CpuThread(cpuInfo: ListBuffer[Double], host: String) extends Thread {
+class CpuThread(cpuInfo: ListBuffer[TsValue], host: String) extends Thread {
   override def run(): Unit = {
     MSsh.runScriptOnMachine("cpu.sh", host) foreach {
       case line =>
         println(line)
-        cpuInfo.remove(0)
-        cpuInfo += line.split(":").lift(2).map(_.toDouble).getOrElse(-3.0)
+        while (cpuInfo.length >  12)
+          cpuInfo.remove(0)
+        val cpu = line.split(":").lift(2).map(_.toDouble).getOrElse(-3.0)
+        val ts = line.split(" ").lift(0).map(_.toLong).getOrElse(30L)
+        cpuInfo += TsValue(ts, cpu)
         println(cpuInfo)
     }
   }

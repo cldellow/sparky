@@ -1,7 +1,9 @@
 package sparky
 
 case class Job(
-  id: Int,
+  id: Long,
+  startMs: Long,
+  finishMs: Long,
   description: String,
   duration: Int,
   tasksDone: Int,

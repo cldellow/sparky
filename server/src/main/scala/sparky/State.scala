@@ -5,8 +5,8 @@ import scala.util.Random
 object State {
   def activeJobs: Seq[Job] = {
     Seq(
-      Job(123, "foo", 123, 12, 4, 20),
-      Job(124, "bar", 234, 15, 4, 20)
+      Job(123, System.currentTimeMillis, 0, "foo", 123, 12, 4, 20),
+      Job(124, System.currentTimeMillis - 12 * 60 * 1000, 0, "bar", 234, 15, 4, 20)
     )
   }
 

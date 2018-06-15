@@ -17,7 +17,7 @@ class Job extends Component {
         <tr>
           <td>{this.state.id}</td>
           <td>{this.state.description}</td>
-          <td>{this.state.duration}</td>
+          <td>{Math.ceil(((this.state.finishMs || new Date()) - this.state.startMs) / 1000)} sec</td>
           <td>
             <div className="progress" style={{"marginBottom": "0", "position": "relative"}}>
               <div className="progress-bar bg-success" style={{"width": pct(this.state.tasksDone, this.state.tasksTotal), "backgroundColor": "#3EC0FF"}}></div>

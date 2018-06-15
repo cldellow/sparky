@@ -1,15 +1,16 @@
 package sparky
-
 import spark.{Request, Response}
 import spray.json._
 import DefaultJsonProtocol._
 
 import collection.mutable.ListBuffer
 import collection.mutable.Map
+import scala.collection.JavaConverters._
 import sys.process._
+import java.util.concurrent.ConcurrentHashMap
 
 object Formatters extends DefaultJsonProtocol {
-  implicit val jobFormatter = jsonFormat6(Job)
+  implicit val jobFormatter = jsonFormat8(Job)
   implicit val tsValueFormatter = jsonFormat2(TsValue)
   implicit val clusterBandwidth = jsonFormat4(Bandwidth)
 }
@@ -21,6 +22,16 @@ object App extends SparkScaffolding {
       .headOption
       .map(_.toString.replaceAll("\"", ""))
       .getOrElse("")
+
+  def long(obj: JsObject, key: String): Long =
+    obj
+      .getFields(key)
+      .headOption
+      .map(_.toString.toLong)
+      .getOrElse(-1L)
+
+
+  val jobs = new ConcurrentHashMap[Long, Job]
 
   def main(args: Array[String]): Unit = {
 
@@ -43,12 +54,24 @@ object App extends SparkScaffolding {
               cpuThread.start
               threads += (host -> Map( "thread" -> cpuThread))
               hosts += (host -> Map("cpu"-> cpuInfo))
+            case "SparkListenerJobStart" =>
+              val desc = str(obj, "desc")
+              val ts = long(obj, "ts")
+              val id = long(obj, "id")
+
+              jobs.put(id, Job(id, ts, 0, desc, 0, 0, 0, 0))
+            case "SparkListenerJobEnd" =>
+              val ts = long(obj, "ts")
+              val id = long(obj, "id")
+
+              val old = jobs.get(id)
+              jobs.put(id, old.copy(finishMs = ts))
             case "SparkListenerExecutorRemoved" =>
               threads.lift(host).flatMap(_.get("thread")).foreach(_.stop)
               threads -= (host)
               hosts -= (host)
             case _ =>
-              println("no match for " + e)
+              //println("no match for " + e)
           }
         }
       }
@@ -68,7 +91,7 @@ object App extends SparkScaffolding {
     import Formatters._
 
     get("/active-jobs"){ (req: Request, res: Response) =>
-      State.activeJobs.toJson
+      jobs.asScala.values.toJson
     }
 
     get("/cluster-cpu"){ (req: Request, res: Response) =>

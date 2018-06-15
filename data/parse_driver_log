@@ -1,0 +1,67 @@
+#!/bin/bash
+
+set -euo pipefail
+
+log_dir=/var/log/spark
+spark_app_id=${1:?must provide spark app id}
+
+base_log_path="$log_dir"/"$spark_app_id"
+if [ -e "$base_log_path" ]; then
+  log_path="$base_log_path"
+elif [ -e "$base_log_path".inprogress ]; then
+  log_path="$base_log_path".inprogress
+else
+  echo "cannot find log file for $spark_app_id in $log_dir" >&2
+  exit 1
+fi
+
+tail -n +1 -f "$log_path" |
+  jq -rc --unbuffered '
+    if .Event == "SparkListenerExecutorAdded" then
+      { 
+        "e": .Event,
+        "ts": .Timestamp,
+        "ex_id": ."Executor ID",
+        "host": ."Executor Info".Host
+      }
+    elif .Event == "SparkListenerExecutorRemoved" then
+      {
+        "e": .Event,
+        "ts": .Timestamp,
+        "ex_id": ."Executor ID",
+        "reason": ."Removed Reason"
+      }
+    elif .Event == "SparkListenerJobStart" then
+      {
+        "e": .Event,
+        "ts": ."Submission Time",
+        "id": ."Job ID",
+        "desc": .Properties."spark.job.description",
+        "stages": [."Stage Infos"[] | {"id": ."Stage ID", "task_count": ."Number of Tasks"}]
+      }
+    elif .Event == "SparkListenerJobEnd" then
+      {
+        "e": .Event,
+        "ts": ."Completion Time",
+        "id": ."Job ID",
+        "result": ."Job Result".Result
+      }
+    elif .Event == "SparkListenerTaskStart" then
+      {
+        "e": .Event,
+        "ts": ."Task Info"."Launch Time",
+        "attempt": ."Task Info".Attempt,
+        "ex_id": ."Task Info"."Executor ID",
+        "id": ."Task Info"."Task ID"
+      }
+    elif .Event == "SparkListenerTaskEnd" then
+      {
+        "e": .Event,
+        "ts": ."Task Info"."Finish Time",
+        "reason": ."Task End Reason",
+        "failed": ."Task Info".Failed,
+        "killed": ."Task Info".Killed
+      }
+    else
+      empty
+    end'

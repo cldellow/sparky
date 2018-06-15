@@ -3,15 +3,18 @@
 }
 
 .App-logo {
-  animation: App-logo-spin infinite 20s linear;
   height: 80px;
 }
 
 .App-header {
-  background-color: #222;
-  height: 150px;
+  background-color: #ebebeb;
+  height: 120px;
   padding: 20px;
-  color: white;
+  color: #222;
+}
+
+.App-header h1 {
+  margin-top: 30px;
 }
 
 .App-title {
@@ -22,7 +25,18 @@
   font-size: large;
 }
 
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.jobs {
+  width: 100%;
+}
+
+.jobs, .jobs th, .jobs td {
+  border: 1px solid #222;
+}
+
+.jobs th {
+  text-align: center;
+}
+
+.jobs td {
+  text-align: left;
 }

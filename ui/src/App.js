@@ -1,34 +1,47 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import Cpu from './Cpu.js';
 import Job from './Job.js';
+import Bandwidth from './Bandwidth.js';
 import { Grid, Row, Col } from 'react-bootstrap';
 import './App.css';
 
 class App extends Component {
   render() {
-    const jobs = [ ];
-    jobs.push(<Col md={6}><Job/></Col>);
-    jobs.push(<Col md={6}><Job/></Col>);
-    jobs.push(<Col md={6}><Job/></Col>);
-    jobs.push(<Col md={6}><Job/></Col>);
-    jobs.push(<Col md={6}><Job/></Col>);
-    jobs.push(<Col md={6}><Job/></Col>);
-    jobs.push(<Col md={6}><Job/></Col>);
-    jobs.push(<Col md={6}><Job/></Col>);
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to Stuff</h1>
+          <img src="/logo.png" className="App-logo" alt="logo" style={{"float": "left"}}/>
+          <h1 className="App-title">Your first mistake was writing a Spark application.</h1>
         </header>
         <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload!
         </p>
+
         <Grid>
           <Row>
-            {jobs}
+            <Col md={12}>
+              <table className="jobs">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Description</th>
+                    <th>Duration</th>
+                    <th>Tasks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <Job/>
+                </tbody>
+              </table>
+            </Col>
           </Row>
-
+          <Row>
+            <Col md={6}>
+              <Cpu/>
+            </Col>
+            <Col md={6}>
+              <Bandwidth/>
+            </Col>
+          </Row>
         </Grid>
       </div>
     );

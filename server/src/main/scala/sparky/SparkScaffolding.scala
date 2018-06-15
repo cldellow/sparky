@@ -10,6 +10,9 @@ trait SparkScaffolding {
   def convertToRequest(path: String, f: (Request, Response) ⇒ AnyRef): Route = {
     new Route() {
       override def handle(request: Request, response: Response): AnyRef = {
+        // Permit the React app on different origin (localhost:3000 vs localhost:4567) to
+        // fetch things from this server.
+        response.header("Access-Control-Allow-Origin", "*")
         f(request, response)
       }
     }

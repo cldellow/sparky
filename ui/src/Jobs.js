@@ -46,7 +46,7 @@ class Jobs extends Component {
             <th>ID</th>
             <th>Description</th>
             <th>Duration</th>
-            <th>Tasks</th>
+            <th width={"200px"}>Tasks</th>
           </tr>
         </thead>
         <tbody>

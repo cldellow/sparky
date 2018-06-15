@@ -17,7 +17,7 @@ class Cpu extends Component {
   componentDidMount() {
     this.timerID = setInterval(
       () => this.tick(),
-      100
+      1000
     );
   }
 

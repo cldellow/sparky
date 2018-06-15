@@ -8,7 +8,12 @@ class Bandwidth extends Component {
 
     const data = [];
     for(var i = 1529030759; i < 1529030759 + 120; i++) {
-      data.push({ts: i, cpu: Math.random()});
+      data.push({
+        ts: i,
+        internal: Math.random() * 20,
+        externalOut: Math.random() * 100,
+        externalIn: Math.random() * 100
+      });
     }
 
     this.state = {data: data};
@@ -17,7 +22,7 @@ class Bandwidth extends Component {
   componentDidMount() {
     this.timerID = setInterval(
       () => this.tick(),
-      100
+      1000
     );
   }
 
@@ -27,7 +32,13 @@ class Bandwidth extends Component {
 
   tick() {
     const data = this.state.data.slice(1);
-    data.push({ts: data[data.length - 1].ts + 1, cpu: Math.random()});
+    data.push({
+      ts: data[data.length - 1].ts + 1,
+      internal: Math.random() * 20,
+      externalOut: Math.random() * 100,
+      externalIn: Math.random() * 100
+    });
+
     this.setState({data: data});
   }
 
@@ -39,14 +50,14 @@ class Bandwidth extends Component {
 <VictoryChart>
   <VictoryAxis
     dependentAxis
-    domain={[0, 1]}
-    tickFormat={(x) => (x * 100) + "%" }/>
+    domain={[0, 1000]}
+    tickFormat={(x) => x + "MB/sec" }/>
     {/* external IN, external OUT, internal ? */}
   <VictoryStack
     colorScale={["tomato", "orange", "cyan"]}>
-    <VictoryBar data={this.state.data} x="ts" y="cpu"/>
-    <VictoryBar data={this.state.data} x="ts" y="cpu"/>
-    <VictoryBar data={this.state.data} x="ts" y="cpu"/>
+    <VictoryBar data={this.state.data} x="ts" y="externalOut"/>
+    <VictoryBar data={this.state.data} x="ts" y="externalIn"/>
+    <VictoryBar data={this.state.data} x="ts" y="internal"/>
   </VictoryStack>
 </VictoryChart>
 </div>

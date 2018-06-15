@@ -15,6 +15,13 @@ object Formatters extends DefaultJsonProtocol {
 }
 
 object App extends SparkScaffolding {
+  def str(obj: JsObject, key: String): String =
+    obj
+      .getFields(key)
+      .headOption
+      .map(_.toString.replaceAll("\"", ""))
+      .getOrElse("")
+
   def main(args: Array[String]): Unit = {
 
     val hosts: Map[String, Map[String, ListBuffer[Double]]] = Map()
@@ -24,20 +31,19 @@ object App extends SparkScaffolding {
       override def run(): Unit = {
         val cmd = Seq("tail", "-n", "100000", "-f", "log_file")
         cmd.lineStream foreach { case line =>
-          val ev = line.parseJson.asJsObject.getFields("e", "host").map(_.toString.replaceAll("\"", ""))
+          val obj = line.parseJson.asJsObject
+
+          val e = str(obj, "e")
+          val host = str(obj, "host")
           println(line)
-          val e = ev(0)
-          println(e)
           e match {
             case "SparkListenerExecutorAdded" =>
-              val host = ev(1)
               val cpuInfo = new ListBuffer() ++= Seq(0, 0.1, 0.2, 0.3, 0.4)
               val cpuThread = new CpuThread(cpuInfo, host)
               cpuThread.start
               threads += (host -> Map( "thread" -> cpuThread))
               hosts += (host -> Map("cpu"-> cpuInfo))
             case "SparkListenerExecutorRemoved" =>
-              val host = ev(1)
               threads.lift(host).flatMap(_.get("thread")).foreach(_.stop)
               threads -= (host)
               hosts -= (host)

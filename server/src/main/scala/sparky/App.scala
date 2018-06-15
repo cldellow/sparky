@@ -114,17 +114,35 @@ object App extends SparkScaffolding {
     }
   }
 }
+
+
+class NewFileException extends Exception
+
 class CpuThread(cpuInfo: ListBuffer[TsValue], host: String) extends Thread {
   override def run(): Unit = {
-    MSsh.runScriptOnMachine("cpu.sh", host) foreach {
-      case line =>
-        println(line)
-        while (cpuInfo.length >  120)
-          cpuInfo.remove(0)
-        val cpu = line.split(":").lift(2).map(_.toDouble).getOrElse(-3.0)
-        val ts = line.split(" ").lift(0).map(_.toLong).getOrElse(30L)
-        cpuInfo += TsValue(ts, cpu)
-        println(cpuInfo)
+    val script = "cpu.sh"
+    while (true) {
+      val origFileTs = MSsh.getTs(script)
+      try {
+        MSsh.runScriptOnMachine(script, host) foreach {
+          case line =>
+            //println(line)
+            while (cpuInfo.length >  120)
+              cpuInfo.remove(0)
+            val cpu = line.split(":").lift(2).map(_.toDouble).getOrElse(-3.0)
+            val ts = line.split(" ").lift(0).map(_.toLong).getOrElse(30L)
+            cpuInfo += TsValue(ts, cpu)
+            //println(cpuInfo)
+            val newFileTs = MSsh.getTs(script)
+            if (newFileTs > origFileTs) {
+              println(script + " has been updated sending to " + host)
+              throw new NewFileException
+            }
+        }
+      } catch {
+        case e: NewFileException =>
+          println("file has been copied")
+      }
     }
   }
 }

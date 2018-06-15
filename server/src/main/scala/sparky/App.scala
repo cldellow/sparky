@@ -6,6 +6,7 @@ import DefaultJsonProtocol._
 
 object Formatters extends DefaultJsonProtocol {
   implicit val jobFormatter = jsonFormat6(Job)
+  implicit val tsValueFormatter = jsonFormat2(TsValue)
 }
 
 
@@ -17,5 +18,10 @@ object App extends SparkScaffolding {
     get("/active-jobs"){ (req: Request, res: Response) =>
       State.activeJobs.toJson
     }
+
+    get("/cluster-cpu"){ (req: Request, res: Response) =>
+      State.clusterCpu.toJson
+    }
+
   }
 }

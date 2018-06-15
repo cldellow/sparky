@@ -6,12 +6,8 @@ class Cpu extends Component {
   constructor(props) {
     super(props);
 
-    const data = [];
-    for(var i = 1529030759; i < 1529030759 + 120; i++) {
-      data.push({ts: i, cpu: Math.random()});
-    }
-
-    this.state = {data: data};
+    this.state = {};
+    this.tick = this.tick.bind(this);;
   }
 
   componentDidMount() {
@@ -26,9 +22,14 @@ class Cpu extends Component {
   }
 
   tick() {
-    const data = this.state.data.slice(1);
-    data.push({ts: data[data.length - 1].ts + 1, cpu: Math.random()});
-    this.setState({data: data});
+    const me = this;
+    fetch('http://localhost:4567/cluster-cpu')
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(json) {
+        me.setState({data: json});
+      })
   }
 
   render() {
@@ -41,7 +42,7 @@ class Cpu extends Component {
     dependentAxis
     domain={[0, 1]}
     tickFormat={(x) => (x * 100) + "%" }/>
-  <VictoryLine data={this.state.data} x="ts" y="cpu"/>
+  <VictoryLine data={this.state.data} x="ts" y="value"/>
 </VictoryChart>
 </div>
       </div>

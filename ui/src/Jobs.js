@@ -24,7 +24,6 @@ class Jobs extends Component {
 
   tick() {
     const me = this;
-    //this.setState({data: data});
     fetch('http://localhost:4567/active-jobs')
       .then(function(response) {
         return response.json();

@@ -1,6 +1,7 @@
 package sparky
 
 import sys.process._
+import java.io.File
 
 class MSsh(command: String, hostname: String) {
   def runSsh(): Stream[String] = {
@@ -21,9 +22,15 @@ object MSsh {
     val cmd = Seq("scp", file,  hostname + ":"+remoteFile)
     cmd.lineStream foreach println
   }
+  def getTs(script: String) = {
+    new File("../data/" + script).lastModified
+  }
+  def doScp(script: String, host: String) {
+    MSsh.scpTo("../data/"+ script, host, "bin/sparky/" + script)
+  }
   def newMSsh(script: String, host: String): MSsh = {
     new MSsh("mkdir -p ~/bin/sparky/", host).runSsh() foreach println
-    MSsh.scpTo("../data/"+ script, host, "bin/sparky/" + script)
+    doScp(script, host)
     new MSsh("chmod 755 ~/bin/sparky/"+ script, host).runSsh() foreach println
     new MSsh("~/bin/sparky/"+ script, host)
   }

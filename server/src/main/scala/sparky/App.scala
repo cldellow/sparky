@@ -33,6 +33,8 @@ object App extends SparkScaffolding {
 
 
   val jobs = new ConcurrentHashMap[Long, Job]
+  val stage2job = new ConcurrentHashMap[Long, Long]
+  val task2stage = new ConcurrentHashMap[Long, Long]
 
   def main(args: Array[String]): Unit = {
 
@@ -42,7 +44,11 @@ object App extends SparkScaffolding {
     val thread2 = new Thread {
       override def run(): Unit = {
         val cmd = Seq("tail", "-n", "+1", "-f", "log_file")
+        var lines = 0
         cmd.lineStream foreach { case line =>
+          lines = lines + 1
+          // Replay at slower speed to see if things are working
+          //if (lines % 1000 == 0) { Thread.sleep(1000) }
           val obj = line.parseJson.asJsObject
 
           val e = str(obj, "e")
@@ -59,11 +65,27 @@ object App extends SparkScaffolding {
               val desc = str(obj, "desc")
               val ts = long(obj, "ts")
               val id = long(obj, "id")
-              val stages = obj.fields("stages").asInstanceOf[JsArray]
-              println(stages.elements)
-              val tasksTotal: Long = stages.elements.map(_.asInstanceOf[JsObject]).map(long(_, "task_count")).sum
-
+              val stages = obj.fields("stages").asInstanceOf[JsArray].elements.map(_.asInstanceOf[JsObject])
+              val tasksTotal: Long = stages.map(long(_, "task_count")).sum
+              stages.foreach(stage => stage2job.put(long(stage, "id"), id))
               jobs.put(id, Job(id, ts, 0, desc, 0, 0, 0, tasksTotal))
+            case "SparkListenerTaskStart" =>
+              val id = long(obj, "id")
+              val stageId = long(obj, "stage_id")
+              task2stage.put(id, stageId)
+              val jobId = stage2job.get(stageId)
+              val old = jobs.get(jobId)
+              jobs.put(jobId, old.copy(tasksActive = old.tasksActive + 1))
+            case "SparkListenerTaskEnd" =>
+              /*
+              val id = long(obj, "id")
+              val stageId = long(obj, "stage_id")
+              task2stage.put(id, stageId)
+              val jobId = stage2job.get(stageId)
+              val old = jobs.get(jobId)
+              jobs.put(jobId, old.copy(tasksActive = old.tasksActive + 1))
+              */
+
             case "SparkListenerJobEnd" =>
               val ts = long(obj, "ts")
               val id = long(obj, "id")

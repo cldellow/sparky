@@ -7,6 +7,12 @@ import DefaultJsonProtocol._
 import collection.mutable.ListBuffer
 import collection.mutable.Map
 
+object Formatters extends DefaultJsonProtocol {
+  implicit val jobFormatter = jsonFormat6(Job)
+  implicit val tsValueFormatter = jsonFormat2(TsValue)
+  implicit val clusterBandwidth = jsonFormat4(Bandwidth)
+}
+
 object App extends SparkScaffolding {
   def main(args: Array[String]): Unit = {
 
@@ -32,6 +38,22 @@ object App extends SparkScaffolding {
       case ("cpu", value) => ("cpu", value.toSeq)
       case  (key, value) => (key, value)
       }.toJson
+    }
+
+
+    println("Ready!")
+    import Formatters._
+
+    get("/active-jobs"){ (req: Request, res: Response) =>
+      State.activeJobs.toJson
+    }
+
+    get("/cluster-cpu"){ (req: Request, res: Response) =>
+      State.clusterCpu.toJson
+    }
+
+    get("/cluster-bandwidth"){ (req: Request, res: Response) =>
+      State.clusterBandwidth.toJson
     }
   }
 }

@@ -3,15 +3,7 @@ import React, { Component } from 'react';
 class Job extends Component {
   constructor(props) {
     super(props);
-    
-    this.state = {
-      id: 123,
-      description: "Doing stuff",
-      duration: 12,
-      tasksDone: 12,
-      tasksActive: 4,
-      tasksTotal: 20
-    };
+    this.state = props.data;
   }
 
 
@@ -32,10 +24,6 @@ class Job extends Component {
               <div className="progress-bar bg-info" style={{"width": pct(this.state.tasksActive, this.state.tasksTotal), "backgroundColor": "#A0DFFF"}}></div>
               <span className="task-progress">{this.state.tasksDone} / {this.state.tasksTotal}</span>
             </div>
- 
-{/*
-{this.state.tasksDone} {this.state.tasksActive} {this.state.tasksTotal}
-*/}
   </td>
         </tr>
     );

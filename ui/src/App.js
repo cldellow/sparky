@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Cpu from './Cpu.js';
-import Job from './Job.js';
+import Jobs from './Jobs.js';
 import Bandwidth from './Bandwidth.js';
 import { Grid, Row, Col } from 'react-bootstrap';
 import './App.css';
@@ -19,19 +19,7 @@ class App extends Component {
         <Grid>
           <Row>
             <Col md={12}>
-              <table className="jobs">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Description</th>
-                    <th>Duration</th>
-                    <th>Tasks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <Job/>
-                </tbody>
-              </table>
+              <Jobs/>
             </Col>
           </Row>
           <Row>

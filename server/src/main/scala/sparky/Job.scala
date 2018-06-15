@@ -6,7 +6,7 @@ case class Job(
   finishMs: Long,
   description: String,
   duration: Int,
-  tasksDone: Int,
-  tasksActive: Int,
-  tasksTotal: Int
+  tasksDone: Long,
+  tasksActive: Long,
+  tasksTotal: Long
 )

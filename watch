@@ -7,4 +7,4 @@ here=$(dirname "${BASH_SOURCE[0]}")
 spark_app_id=${1:?must provide spark app id to watch}
 output_file=/tmp/sparky
 echo "Writing to file $output_file" >&2
-ssh spark-driver-1 'bash -s' < "$here"/data/parse_driver_log "$spark_app_id" > "$output_file"
+ssh spark-driver-1 -t 'bash -s' < "$here"/data/parse_driver_log "$spark_app_id" > "$output_file"

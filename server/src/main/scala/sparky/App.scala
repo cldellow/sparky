@@ -77,14 +77,10 @@ object App extends SparkScaffolding {
               val old = jobs.get(jobId)
               jobs.put(jobId, old.copy(tasksActive = old.tasksActive + 1))
             case "SparkListenerTaskEnd" =>
-              /*
-              val id = long(obj, "id")
               val stageId = long(obj, "stage_id")
-              task2stage.put(id, stageId)
               val jobId = stage2job.get(stageId)
               val old = jobs.get(jobId)
-              jobs.put(jobId, old.copy(tasksActive = old.tasksActive + 1))
-              */
+              jobs.put(jobId, old.copy(tasksActive = old.tasksActive - 1, tasksDone = old.tasksDone + 1))
 
             case "SparkListenerJobEnd" =>
               val ts = long(obj, "ts")
@@ -92,6 +88,9 @@ object App extends SparkScaffolding {
 
               val old = jobs.get(id)
               jobs.put(id, old.copy(finishMs = ts))
+
+              // hack: would beb etter to have a status flag
+              jobs.remove(id)
             case "SparkListenerExecutorRemoved" =>
               threads.lift(host).flatMap(_.get("thread")).foreach(_.stop)
               threads -= (host)

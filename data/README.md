@@ -13,6 +13,7 @@ $ watch 6251715f-a1d3-4b62-9106-af1eb207f795-187895
 A file will be put in `/tmp/sparky` with a condensed summary of events, like:
 
 ```
+{"e":"SparkListenerEnvironmentUpdate","app_name":"com.snapsort.adreports.spark.RevenueImpressionByNetworkLoader$","requested_cores":"120","role":"prod2","driver_mem":"10G","executor_mem":"12G"}
 {"e":"SparkListenerExecutorAdded","ts":1529083389208,"ex_id":"25","host":"172.30.5.7"}
 {"e":"SparkListenerExecutorAdded","ts":1529083389213,"ex_id":"20","host":"172.30.5.248"}
 {"e":"SparkListenerExecutorAdded","ts":1529083389216,"ex_id":"6","host":"172.30.5.14"}

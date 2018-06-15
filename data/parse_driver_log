@@ -31,6 +31,15 @@ tail -n +1 -f "$log_path" |
         "ex_id": ."Executor ID",
         "reason": ."Removed Reason"
       }
+    elif .Event == "SparkListenerEnvironmentUpdate" then
+      {
+        "e": .Event,
+        "app_name": ."Spark Properties"."spark.app.name",
+        "requested_cores": ."Spark Properties"."spark.cores.max",
+        "role": ."Spark Properties"."spark.mesos.role",
+        "driver_mem": ."Spark Properties"."spark.driver.memory",
+        "executor_mem": ."Spark Properties"."spark.executor.memory"
+      }
     elif .Event == "SparkListenerJobStart" then
       {
         "e": .Event,

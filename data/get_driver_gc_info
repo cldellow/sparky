@@ -17,7 +17,8 @@ jstat -gcutil "$pid" 1000 |
   awk 'NR>1 {print $4, $9, $10; system("")}' |
   while read -r old_utilization fgc fgct; do
     jq -nc \
-      --arg old_utilization "$old_utilization" \
-      --arg fgc "$fgc" \
-      --arg fgct "$fgct" '{"old_utilization":$old_utilization, "fgc":$fgc, fgct:$fgct}'
+      --argjson ts $(date +'%s') \
+      --argjson old_utilization "$old_utilization" \
+      --argjson fgc "$fgc" \
+      --argjson fgct "$fgct" '{"ts": $ts, "old_utilization":$old_utilization, "fgc":$fgc, fgct:$fgct}'
   done

@@ -1,5 +1,4 @@
 package sparky
-
 import spark.{Request, Response}
 import spray.json._
 import DefaultJsonProtocol._
@@ -7,15 +6,34 @@ import DefaultJsonProtocol._
 import collection.mutable.ListBuffer
 import collection.mutable.Map
 import collection.immutable.TreeMap
+import scala.collection.JavaConverters._
 import sys.process._
+import java.util.concurrent.ConcurrentHashMap
 
 object Formatters extends DefaultJsonProtocol {
-  implicit val jobFormatter = jsonFormat6(Job)
+  implicit val jobFormatter = jsonFormat8(Job)
   implicit val tsValueFormatter = jsonFormat2(TsValue)
   implicit val clusterBandwidth = jsonFormat4(Bandwidth)
 }
 
 object App extends SparkScaffolding {
+  def str(obj: JsObject, key: String): String =
+    obj
+      .getFields(key)
+      .headOption
+      .map(_.toString.replaceAll("\"", ""))
+      .getOrElse("")
+
+  def long(obj: JsObject, key: String): Long =
+    obj
+      .getFields(key)
+      .headOption
+      .map(_.toString.toLong)
+      .getOrElse(-1L)
+
+
+  val jobs = new ConcurrentHashMap[Long, Job]
+
   def main(args: Array[String]): Unit = {
 
     val hosts: Map[String, Map[String, ListBuffer[TsValue]]] = Map()
@@ -25,25 +43,36 @@ object App extends SparkScaffolding {
       override def run(): Unit = {
         val cmd = Seq("tail", "-n", "100000", "-f", "log_file")
         cmd.lineStream foreach { case line =>
-          val ev = line.parseJson.asJsObject.getFields("e", "host").map(_.toString.replaceAll("\"", ""))
+          val obj = line.parseJson.asJsObject
+
+          val e = str(obj, "e")
+          val host = str(obj, "host")
           println(line)
-          val e = ev(0)
-          println(e)
           e match {
             case "SparkListenerExecutorAdded" =>
-              val host = ev(1)
-              val cpuInfo = new ListBuffer() ++= Seq(TsValue(0, 0))
+              val cpuInfo = new ListBuffer[TsValue]()
               val cpuThread = new CpuThread(cpuInfo, host)
               cpuThread.start
               threads += (host -> Map( "thread" -> cpuThread))
               hosts += (host -> Map("cpu"-> cpuInfo))
+            case "SparkListenerJobStart" =>
+              val desc = str(obj, "desc")
+              val ts = long(obj, "ts")
+              val id = long(obj, "id")
+
+              jobs.put(id, Job(id, ts, 0, desc, 0, 0, 0, 0))
+            case "SparkListenerJobEnd" =>
+              val ts = long(obj, "ts")
+              val id = long(obj, "id")
+
+              val old = jobs.get(id)
+              jobs.put(id, old.copy(finishMs = ts))
             case "SparkListenerExecutorRemoved" =>
-              val host = ev(1)
               threads.lift(host).flatMap(_.get("thread")).foreach(_.stop)
               threads -= (host)
               hosts -= (host)
             case _ =>
-              println("no match for " + e)
+              //println("no match for " + e)
           }
         }
       }
@@ -64,7 +93,7 @@ object App extends SparkScaffolding {
     println("Ready!")
 
     get("/active-jobs"){ (req: Request, res: Response) =>
-      State.activeJobs.toJson
+      jobs.asScala.values.toJson
     }
 
     get("/cluster-cpu"){ (req: Request, res: Response) =>
@@ -77,7 +106,7 @@ object App extends SparkScaffolding {
         }
       }}
       val tmap: TreeMap[Long, TsValue] = TreeMap((0L, TsValue(0L, 0.0))) ++ tsMap
-      tmap.values.toJson
+      tmap.drop(1).values.toJson
     }
 
     get("/cluster-bandwidth"){ (req: Request, res: Response) =>

@@ -35,6 +35,7 @@ tail -n +1 -f "$log_path" |
       {
         "e": .Event,
         "app_name": ."Spark Properties"."spark.app.name",
+        "app_id": ."Spark Properties"."spark.app.id",
         "requested_cores": ."Spark Properties"."spark.cores.max",
         "role": ."Spark Properties"."spark.mesos.role",
         "driver_mem": ."Spark Properties"."spark.driver.memory",

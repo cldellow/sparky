@@ -35,6 +35,7 @@ object App extends SparkScaffolding {
   val jobs = new ConcurrentHashMap[Long, Job]
   val stage2job = new ConcurrentHashMap[Long, Long]
   val task2stage = new ConcurrentHashMap[Long, Long]
+  var requestedMachines = 0
 
   def main(args: Array[String]): Unit = {
 
@@ -48,13 +49,19 @@ object App extends SparkScaffolding {
         cmd.lineStream foreach { case line =>
           lines = lines + 1
           // Replay at slower speed to see if things are working
-          //if (lines % 1000 == 0) { Thread.sleep(1000) }
+          if (lines % 1000 == 0) {
+            println(s"Got $lines lines")
+            //Thread.sleep(1000)
+          }
           val obj = line.parseJson.asJsObject
 
           val e = str(obj, "e")
           val host = str(obj, "host")
-          println(line)
           e match {
+            case "SparkListenerEnvironmentUpdate" =>
+              requestedMachines = str(obj, "requested_cores").toInt / 4
+              println(requestedMachines)
+
             case "SparkListenerExecutorAdded" =>
               val cpuInfo = new ListBuffer[TsValue]()
               val cpuThread = new CpuThread(cpuInfo, host)
@@ -136,6 +143,11 @@ object App extends SparkScaffolding {
     get("/cluster-bandwidth"){ (req: Request, res: Response) =>
       State.clusterBandwidth.toJson
     }
+
+    get("/hosts"){ (req: Request, res: Response) =>
+      collection.immutable.Map("requested" -> requestedMachines, "actual" -> hosts.size).toJson
+    }
+
   }
 }
 class CpuThread(cpuInfo: ListBuffer[TsValue], host: String) extends Thread {

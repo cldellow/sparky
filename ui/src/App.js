@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Cpu from './Cpu.js';
 import Jobs from './Jobs.js';
 import Bandwidth from './Bandwidth.js';
+import Hosts from './Hosts.js';
 import { Grid, Row, Col } from 'react-bootstrap';
 import './App.css';
 
@@ -18,12 +19,16 @@ class App extends Component {
 
         <Grid>
           <Row>
-            <Col md={6}>
+            <Col md={5}>
               <Cpu/>
             </Col>
-            <Col md={6}>
+            <Col md={5}>
               <Bandwidth/>
             </Col>
+            <Col md={2}>
+              <Hosts/>
+            </Col>
+
           </Row>
           <Row>
             <Col md={12}>

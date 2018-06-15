@@ -40,3 +40,14 @@
 .jobs td {
   text-align: left;
 }
+
+.progress {
+  position: relative;
+}
+
+.task-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+}

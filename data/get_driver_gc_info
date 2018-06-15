@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -euo pipefail
+
+log_dir=/var/log/spark
+spark_app_id=${1:?must provide spark app id}
+
+log_file="$log_dir"/"$spark_app_id".inprogress
+
+if [ ! -e "$log_file" ]; then
+  echo "no in progress spark app with spark app id $spark_app_id" >&2
+  exit 0
+fi
+
+pid=$(awk '$1 == "java" {print $2}' <(lsof "$log_file"))
+jstat -gcutil "$pid" 1000 |
+  awk 'NR>1 {print $4, $9, $10; system("")}' |
+  while read -r old_utilization fgc fgct; do
+    jq -nc \
+      --arg old_utilization "$old_utilization" \
+      --arg fgc "$fgc" \
+      --arg fgct "$fgct" '{"old_utilization":$old_utilization, "fgc":$fgc, fgct:$fgct}'
+  done

@@ -27,7 +27,7 @@ class Job extends Component {
           <td>{this.state.description}</td>
           <td>{this.state.duration}</td>
           <td>
-            <div className="progress" style={{"margin-bottom": "0", "position": "relative"}}>
+            <div className="progress" style={{"marginBottom": "0", "position": "relative"}}>
               <div className="progress-bar bg-success" style={{"width": pct(this.state.tasksDone, this.state.tasksTotal), "backgroundColor": "#3EC0FF"}}></div>
               <div className="progress-bar bg-info" style={{"width": pct(this.state.tasksActive, this.state.tasksTotal), "backgroundColor": "#A0DFFF"}}></div>
               <span className="task-progress">{this.state.tasksDone} / {this.state.tasksTotal}</span>

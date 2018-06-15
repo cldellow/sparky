@@ -60,6 +60,7 @@ tail -n +1 -f "$log_path" |
       {
         "e": .Event,
         "ts": ."Task Info"."Launch Time",
+        "stage_id": ."Stage ID",
         "attempt": ."Task Info".Attempt,
         "ex_id": ."Task Info"."Executor ID",
         "id": ."Task Info"."Task ID"
@@ -68,6 +69,7 @@ tail -n +1 -f "$log_path" |
       {
         "e": .Event,
         "ts": ."Task Info"."Finish Time",
+        "stage_id": ."Stage ID",
         "reason": ."Task End Reason",
         "failed": ."Task Info".Failed,
         "killed": ."Task Info".Killed

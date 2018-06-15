@@ -18,11 +18,6 @@ class App extends Component {
 
         <Grid>
           <Row>
-            <Col md={12}>
-              <Jobs/>
-            </Col>
-          </Row>
-          <Row>
             <Col md={6}>
               <Cpu/>
             </Col>
@@ -30,6 +25,12 @@ class App extends Component {
               <Bandwidth/>
             </Col>
           </Row>
+          <Row>
+            <Col md={12}>
+              <Jobs/>
+            </Col>
+          </Row>
+
         </Grid>
       </div>
     );

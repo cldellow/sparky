@@ -53,7 +53,7 @@ class Bandwidth extends Component {
   <VictoryAxis
     dependentAxis
     domain={[0, 1000]}
-    tickFormat={(x) => x + "MB/sec" }/>
+    tickFormat={(x) => x + "MB/s" }/>
     {/* external IN, external OUT, internal ? */}
   <VictoryStack
     colorScale={["tomato", "orange", "cyan"]}>

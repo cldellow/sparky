@@ -6,25 +6,32 @@ class Jobs extends Component {
     super(props);
     
     this.state = {
-      jobs: [
-      {
-      id: 123,
-      description: "Doing stuff",
-      duration: 12,
-      tasksDone: 12,
-      tasksActive: 4,
-      tasksTotal: 20
-      },
-      {
-      id: 124,
-      description: "Doing other stuff",
-      duration: 234,
-      tasksDone: 14,
-      tasksActive: 4,
-      tasksTotal: 20
-      }
+      jobs: []
+    };
+    this.tick = this.tick.bind(this);;
+  }
 
-      ]};
+  componentDidMount() {
+    this.timerID = setInterval(
+      () => this.tick(),
+      1000
+    );
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+
+  tick() {
+    const me = this;
+    //this.setState({data: data});
+    fetch('http://localhost:4567/active-jobs')
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(json) {
+        me.setState({jobs: json});
+      })
   }
 
 

@@ -6,6 +6,7 @@ class Bandwidth extends Component {
   constructor(props) {
     super(props);
 
+    /*
     const data = [];
     for(var i = 1529030759; i < 1529030759 + 120; i++) {
       data.push({
@@ -15,8 +16,10 @@ class Bandwidth extends Component {
         externalIn: Math.random() * 100
       });
     }
+    */
 
-    this.state = {data: data};
+    this.state = {};
+    this.tick = this.tick.bind(this);;
   }
 
   componentDidMount() {
@@ -31,15 +34,14 @@ class Bandwidth extends Component {
   }
 
   tick() {
-    const data = this.state.data.slice(1);
-    data.push({
-      ts: data[data.length - 1].ts + 1,
-      internal: Math.random() * 20,
-      externalOut: Math.random() * 100,
-      externalIn: Math.random() * 100
-    });
-
-    this.setState({data: data});
+    const me = this;
+    fetch('http://localhost:4567/cluster-bandwidth')
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(json) {
+        me.setState({data: json});
+      })
   }
 
   render() {

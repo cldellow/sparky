@@ -7,6 +7,7 @@ import DefaultJsonProtocol._
 object Formatters extends DefaultJsonProtocol {
   implicit val jobFormatter = jsonFormat6(Job)
   implicit val tsValueFormatter = jsonFormat2(TsValue)
+  implicit val clusterBandwidth = jsonFormat4(Bandwidth)
 }
 
 
@@ -23,5 +24,8 @@ object App extends SparkScaffolding {
       State.clusterCpu.toJson
     }
 
+    get("/cluster-bandwidth"){ (req: Request, res: Response) =>
+      State.clusterBandwidth.toJson
+    }
   }
 }

@@ -21,4 +21,20 @@ object State {
       TsValue(sec, r.nextDouble)
     }
   }
+
+  def clusterBandwidth: Seq[Bandwidth] = {
+    // Use a seed so the numbers are stable
+    val r = new Random(0)
+    val now = System.currentTimeMillis / 1000
+    // Throw away a consistent number of values to prevent jitter
+    (0 to (now.toInt % 1000)).foreach { x =>
+      r.nextDouble
+      r.nextDouble
+      r.nextDouble
+    }
+
+    (now - 120 to now).map { sec =>
+      Bandwidth(sec, r.nextDouble * 20, r.nextDouble * 100, r.nextDouble * 100)
+    }
+  }
 }

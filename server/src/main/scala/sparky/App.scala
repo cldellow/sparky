@@ -16,10 +16,11 @@ object Formatters extends DefaultJsonProtocol {
 object App extends SparkScaffolding {
   def main(args: Array[String]): Unit = {
 
-      val host = "172.30.5.7"
-      val cpuInfo = new ListBuffer() ++= Seq(0, 0.1, 0.2, 0.3, 0.4)
-      /*
-      new Thread {
+    val host = "172.30.5.7"
+    val cpuInfo = new ListBuffer() ++= Seq(0, 0.1, 0.2, 0.3, 0.4)
+    /*
+    val thread = new Thread {
+      override def run(): Unit = {
         MSsh.runScriptOnMachine("cpu.sh", host) foreach {
           case line =>
             println(line)
@@ -28,7 +29,9 @@ object App extends SparkScaffolding {
             println(cpuInfo)
         }
       }
-      */
+    }
+    thread.start()
+    */
 
     val hosts = Map(host -> Map("cpu"-> cpuInfo))
 

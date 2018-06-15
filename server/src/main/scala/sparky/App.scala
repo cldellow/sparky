@@ -41,7 +41,7 @@ object App extends SparkScaffolding {
 
     val thread2 = new Thread {
       override def run(): Unit = {
-        val cmd = Seq("tail", "-n", "100000", "-f", "log_file")
+        val cmd = Seq("tail", "-n", "+1", "-f", "log_file")
         cmd.lineStream foreach { case line =>
           val obj = line.parseJson.asJsObject
 
@@ -59,8 +59,11 @@ object App extends SparkScaffolding {
               val desc = str(obj, "desc")
               val ts = long(obj, "ts")
               val id = long(obj, "id")
+              val stages = obj.fields("stages").asInstanceOf[JsArray]
+              println(stages.elements)
+              val tasksTotal: Long = stages.elements.map(_.asInstanceOf[JsObject]).map(long(_, "task_count")).sum
 
-              jobs.put(id, Job(id, ts, 0, desc, 0, 0, 0, 0))
+              jobs.put(id, Job(id, ts, 0, desc, 0, 0, 0, tasksTotal))
             case "SparkListenerJobEnd" =>
               val ts = long(obj, "ts")
               val id = long(obj, "id")

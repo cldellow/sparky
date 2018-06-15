@@ -14,6 +14,7 @@ object Formatters extends DefaultJsonProtocol {
   implicit val jobFormatter = jsonFormat8(Job)
   implicit val tsValueFormatter = jsonFormat2(TsValue)
   implicit val clusterBandwidth = jsonFormat4(Bandwidth)
+  implicit val gcinfoFormatter = jsonFormat4(GCInfo)
 }
 
 object App extends SparkScaffolding {
@@ -23,6 +24,20 @@ object App extends SparkScaffolding {
       .headOption
       .map(_.toString.replaceAll("\"", ""))
       .getOrElse("")
+
+  def double(obj: JsObject, key: String): Double =
+    obj
+      .getFields(key)
+      .headOption
+      .map(_.toString.toDouble)
+      .getOrElse(-1)
+
+  def int(obj: JsObject, key: String): Int =
+    obj
+      .getFields(key)
+      .headOption
+      .map(_.toString.toInt)
+      .getOrElse(-1)
 
   def long(obj: JsObject, key: String): Long =
     obj
@@ -38,10 +53,11 @@ object App extends SparkScaffolding {
 
     val hosts: Map[String, Map[String, ListBuffer[TsValue]]] = Map()
     val threads: Map[String, Map[String, CpuThread]] = Map()
+    val driverGCInfo = new ListBuffer[GCInfo]()
 
     val thread2 = new Thread {
       override def run(): Unit = {
-        val cmd = Seq("tail", "-n", "+1", "-f", "log_file")
+        val cmd = Seq("tail", "-n", "+1", "-f", "/tmp/sparky")
         cmd.lineStream foreach { case line =>
           val obj = line.parseJson.asJsObject
 
@@ -49,6 +65,10 @@ object App extends SparkScaffolding {
           val host = str(obj, "host")
           println(line)
           e match {
+            case "SparkListenerEnvironmentUpdate" =>
+              val appId = str(obj, "app_id")
+              val gcThread = new DriverGCThread(driverGCInfo, appId)
+              gcThread.start
             case "SparkListenerExecutorAdded" =>
               val cpuInfo = new ListBuffer[TsValue]()
               val cpuThread = new CpuThread(cpuInfo, host)
@@ -75,7 +95,7 @@ object App extends SparkScaffolding {
               threads -= (host)
               hosts -= (host)
             case _ =>
-              //println("no match for " + e)
+              println("no match for " + e)
           }
         }
       }
@@ -97,6 +117,11 @@ object App extends SparkScaffolding {
 
     get("/active-jobs"){ (req: Request, res: Response) =>
       jobs.asScala.values.toJson
+    }
+
+    get("/driver-gc-info") { (req: Request, res: Response) =>
+      println(driverGCInfo)
+      driverGCInfo.filter(_.ts > (("date +'%s'" !).toLong - 1800)).toList.toJson
     }
 
     get("/cluster-cpu"){ (req: Request, res: Response) =>
@@ -128,6 +153,15 @@ class CpuThread(cpuInfo: ListBuffer[TsValue], host: String) extends Thread {
         val ts = line.split(" ").lift(0).map(_.toLong).getOrElse(30L)
         cpuInfo += TsValue(ts, cpu)
         println(cpuInfo)
+    }
+  }
+}
+class DriverGCThread(gcInfo: ListBuffer[GCInfo], appId: String) extends Thread {
+  override def run(): Unit = {
+    MSsh.runScriptOnMachine("get_driver_gc_info", "spark-driver-1", appId) foreach {
+      case line =>
+        val obj = line.parseJson.asJsObject
+        gcInfo += GCInfo(App.long(obj, "ts"), App.double(obj, "old_utilization"), App.int(obj, "fgc"), App.double(obj, "fgct"))
     }
   }
 }
